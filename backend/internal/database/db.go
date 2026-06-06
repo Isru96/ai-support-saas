@@ -7,14 +7,20 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-var DB *pgxpool.Pool
+type DB struct {
+	Pool *pgxpool.Pool
+}
 
-func Connect() {
-	url := "postgres://postgres:postgres@localhost:5432/ai_support"
-	pool, err := pgxpool.New(context.Background(), url)
+func Connect(databaseURL string) *DB {
+	pool, err := pgxpool.New(context.Background(), databaseURL)
 	if err != nil {
 		log.Fatal("Cannot connect to database:", err)
 	}
-	DB = pool
+
+	if err := pool.Ping(context.Background()); err != nil {
+		log.Fatal("Cannot ping database:", err)
+	}
+
 	log.Println("Connected to database")
+	return &DB{Pool: pool}
 }
