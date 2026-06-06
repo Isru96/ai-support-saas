@@ -16,6 +16,8 @@ func main() {
 	})
 
 	router.POST("/auth/register", auth.Register)
+	router.POST("/auth/login", auth.Login)
+	router.GET("/auth/me", auth.RequireAuth, auth.Me)
 
 	router.Run(":8080")
 }
