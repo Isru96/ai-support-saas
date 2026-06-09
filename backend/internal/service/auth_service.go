@@ -46,3 +46,7 @@ func (s *AuthService) Login(ctx context.Context, input models.LoginInput) (strin
 	})
 	return token.SignedString([]byte(s.jwtSecret))
 }
+
+func (s *AuthService) GetUserByID(ctx context.Context, id string) (*models.User, error) {
+	return s.userRepo.FindByID(ctx, id)
+}

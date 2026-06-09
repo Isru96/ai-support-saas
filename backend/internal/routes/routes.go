@@ -7,6 +7,8 @@ import (
 )
 
 func Setup(router *gin.Engine, authHandler *handler.AuthHandler, jwtSecret string) {
+	router.Use(middleware.CORS())
+
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "ok"})
 	})

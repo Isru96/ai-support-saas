@@ -29,6 +29,19 @@ func (r *UserRepository) Create(ctx context.Context, email, passwordHash string)
 	return &user, nil
 }
 
+func (r *UserRepository) FindByID(ctx context.Context, id string) (*models.User, error) {
+	var user models.User
+	err := r.db.Pool.QueryRow(ctx,
+		`SELECT id, email, created_at, updated_at
+		 FROM users WHERE id = $1`,
+		id,
+	).Scan(&user.ID, &user.Email, &user.CreatedAt, &user.UpdatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
 func (r *UserRepository) FindByEmail(ctx context.Context, email string) (*models.User, error) {
 	var user models.User
 	err := r.db.Pool.QueryRow(ctx,

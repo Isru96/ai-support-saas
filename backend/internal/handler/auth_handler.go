@@ -50,5 +50,12 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 func (h *AuthHandler) Me(c *gin.Context) {
 	userID, _ := c.Get("user_id")
-	c.JSON(http.StatusOK, gin.H{"user_id": userID})
+
+	user, err := h.authService.GetUserByID(c.Request.Context(), userID.(string))
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"user": user})
 }
