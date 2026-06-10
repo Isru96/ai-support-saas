@@ -5,6 +5,7 @@ import (
 
 	"ai-support-saas/backend/internal/config"
 	"ai-support-saas/backend/internal/database"
+	"ai-support-saas/backend/internal/email"
 	"ai-support-saas/backend/internal/handler"
 	"ai-support-saas/backend/internal/repository"
 	"ai-support-saas/backend/internal/routes"
@@ -13,23 +14,44 @@ import (
 )
 
 func main() {
-	// 1. Load configuration from .env
 	cfg := config.Load()
 
-	// 2. Connect to the database
 	db := database.Connect(cfg.DatabaseURL)
 	defer db.Pool.Close()
 
-	// 3. Wire the layers together (dependency injection)
 	userRepo := repository.NewUserRepository(db)
-	authService := service.NewAuthService(userRepo, cfg.JWTSecret)
+	sessionRepo := repository.NewSessionRepository(db)
+	passwordResetRepo := repository.NewPasswordResetRepository(db)
+	verificationTokenRepo := repository.NewVerificationTokenRepository(db)
+
+	mailer := email.NewSender(cfg.Email)
+	if cfg.Email.Enabled() {
+		log.Println("Email delivery enabled via SMTP")
+	} else {
+		log.Println("Email delivery disabled — emails will be logged to console")
+	}
+
+	authService := service.NewAuthService(
+		userRepo,
+		sessionRepo,
+		passwordResetRepo,
+		verificationTokenRepo,
+		mailer,
+		cfg.JWTSecret,
+		cfg.GoogleClientID,
+		cfg.GoogleClientSecret,
+		cfg.AccessTokenTTL,
+		cfg.RefreshTokenTTL,
+	)
 	authHandler := handler.NewAuthHandler(authService)
 
-	// 4. Set up the router and register routes
-	router := gin.Default()
-	routes.Setup(router, authHandler, cfg.JWTSecret)
+	workspaceRepo := repository.NewWorkspaceRepository(db)
+	workspaceService := service.NewWorkspaceService(workspaceRepo)
+	workspaceHandler := handler.NewWorkspaceHandler(workspaceService)
 
-	// 5. Start the server
+	router := gin.Default()
+	routes.Setup(router, authHandler, workspaceHandler, cfg.JWTSecret, cfg.CorsOrigins)
+
 	log.Printf("Server starting on port %s", cfg.Port)
 	if err := router.Run(":" + cfg.Port); err != nil {
 		log.Fatal("Server failed to start:", err)

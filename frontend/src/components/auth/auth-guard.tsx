@@ -7,15 +7,15 @@ import { useAuthStore } from "@/stores/auth-store"
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter()
-  const token = useAuthStore((state) => state.token)
+  const accessToken = useAuthStore((state) => state.accessToken)
 
   useEffect(() => {
-    if (!token) {
+    if (!accessToken) {
       router.replace("/login")
     }
-  }, [token, router])
+  }, [accessToken, router])
 
-  if (!token) {
+  if (!accessToken) {
     return (
       <div className="flex flex-1 items-center justify-center">
         <p className="text-sm text-muted-foreground">Loading...</p>

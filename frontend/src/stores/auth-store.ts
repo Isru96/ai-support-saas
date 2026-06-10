@@ -3,12 +3,14 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
 
-import type { User } from "@/types/auth"
+import type { TokenPair, User } from "@/types/auth"
 
 interface AuthState {
-  token: string | null
+  accessToken: string | null
+  refreshToken: string | null
   user: User | null
-  setAuth: (token: string, user: User) => void
+  setTokens: (tokens: TokenPair) => void
+  setSession: (tokens: TokenPair, user: User) => void
   setUser: (user: User) => void
   clearAuth: () => void
 }
@@ -16,15 +18,30 @@ interface AuthState {
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
-      token: null,
+      accessToken: null,
+      refreshToken: null,
       user: null,
-      setAuth: (token, user) => set({ token, user }),
+      setTokens: (tokens) =>
+        set({
+          accessToken: tokens.access_token,
+          refreshToken: tokens.refresh_token,
+        }),
+      setSession: (tokens, user) =>
+        set({
+          accessToken: tokens.access_token,
+          refreshToken: tokens.refresh_token,
+          user,
+        }),
       setUser: (user) => set({ user }),
-      clearAuth: () => set({ token: null, user: null }),
+      clearAuth: () =>
+        set({ accessToken: null, refreshToken: null, user: null }),
     }),
     {
       name: "ai-support-auth",
-      partialize: (state) => ({ token: state.token }),
+      partialize: (state) => ({
+        accessToken: state.accessToken,
+        refreshToken: state.refreshToken,
+      }),
     }
   )
 )

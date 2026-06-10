@@ -8,11 +8,12 @@ import { useForm } from "react-hook-form"
 import { z } from "zod"
 
 import { AuthAlert } from "@/components/auth/auth-alert"
+import { AuthDivider } from "@/components/auth/auth-divider"
 import { FormField } from "@/components/auth/form-field"
+import { GoogleSignInButton } from "@/components/auth/google-sign-in-button"
 import { Button } from "@/components/ui/button"
-import { getMe, login } from "@/lib/api/auth"
 import { ApiRequestError } from "@/lib/api/client"
-import { useAuthStore } from "@/stores/auth-store"
+import { loginAndEstablishSession } from "@/lib/auth/session"
 
 const loginSchema = z.object({
   email: z.string().email("Enter a valid email address"),
@@ -23,8 +24,8 @@ type LoginFormValues = z.infer<typeof loginSchema>
 
 export function LoginForm() {
   const router = useRouter()
-  const setAuth = useAuthStore((state) => state.setAuth)
   const [error, setError] = useState<string | null>(null)
+  const hasGoogle = !!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
 
   const {
     register,
@@ -42,9 +43,7 @@ export function LoginForm() {
     setError(null)
 
     try {
-      const { token } = await login(values)
-      const { user } = await getMe(token)
-      setAuth(token, user)
+      await loginAndEstablishSession(values)
       router.replace("/dashboard")
     } catch (err) {
       if (err instanceof ApiRequestError) {
@@ -56,42 +55,63 @@ export function LoginForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      {error && <AuthAlert message={error} />}
+    <div className="space-y-4">
+      {hasGoogle && (
+        <>
+          <GoogleSignInButton />
+          <AuthDivider />
+        </>
+      )}
 
-      <FormField
-        id="email"
-        label="Email"
-        type="email"
-        placeholder="you@company.com"
-        autoComplete="email"
-        error={errors.email}
-        {...register("email")}
-      />
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        {error && <AuthAlert message={error} />}
 
-      <FormField
-        id="password"
-        label="Password"
-        type="password"
-        placeholder="Enter your password"
-        autoComplete="current-password"
-        error={errors.password}
-        {...register("password")}
-      />
+        <FormField
+          id="email"
+          label="Email"
+          type="email"
+          placeholder="you@company.com"
+          autoComplete="email"
+          error={errors.email}
+          {...register("email")}
+        />
 
-      <Button type="submit" className="w-full" disabled={isSubmitting}>
-        {isSubmitting ? "Signing in..." : "Sign in"}
-      </Button>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">Password</span>
+            <Link
+              href="/forgot-password"
+              className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+            >
+              Forgot password?
+            </Link>
+          </div>
+          <FormField
+            id="password"
+            label="Password"
+            labelClassName="sr-only"
+            type="password"
+            placeholder="Enter your password"
+            autoComplete="current-password"
+            error={errors.password}
+            {...register("password")}
+          />
+        </div>
 
-      <p className="text-center text-sm text-muted-foreground">
-        Don&apos;t have an account?{" "}
-        <Link
-          href="/register"
-          className="font-medium text-foreground underline-offset-4 hover:underline"
-        >
-          Create one
-        </Link>
-      </p>
-    </form>
+        <Button type="submit" className="w-full" disabled={isSubmitting}>
+          {isSubmitting ? "Signing in..." : "Sign in"}
+        </Button>
+
+        <p className="text-center text-sm text-muted-foreground">
+          Don&apos;t have an account?{" "}
+          <Link
+            href="/register"
+            className="font-medium text-foreground underline-offset-4 hover:underline"
+          >
+            Create one
+          </Link>
+        </p>
+      </form>
+    </div>
   )
 }

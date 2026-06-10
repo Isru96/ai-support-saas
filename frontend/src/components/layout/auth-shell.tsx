@@ -10,8 +10,8 @@ import {
 } from "@/components/ui/card"
 
 interface AuthShellProps {
-  title: string
-  description: string
+  title?: string
+  description?: string
   children: React.ReactNode
 }
 
@@ -42,11 +42,13 @@ export function AuthShell({
         </div>
 
         <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl">{title}</CardTitle>
-            <CardDescription>{description}</CardDescription>
-          </CardHeader>
-          <CardContent>{children}</CardContent>
+          {title && description ? (
+            <CardHeader>
+              <CardTitle className="text-2xl">{title}</CardTitle>
+              <CardDescription>{description}</CardDescription>
+            </CardHeader>
+          ) : null}
+          <CardContent className={title ? undefined : "pt-6"}>{children}</CardContent>
         </Card>
       </div>
     </div>

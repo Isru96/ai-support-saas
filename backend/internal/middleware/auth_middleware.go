@@ -29,7 +29,13 @@ func RequireAuth(jwtSecret string) gin.HandlerFunc {
 		}
 
 		claims := token.Claims.(jwt.MapClaims)
-		c.Set("user_id", claims["user_id"])
+		userID, ok := claims["user_id"].(string)
+		if !ok {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
+			c.Abort()
+			return
+		}
+		c.Set("user_id", userID)
 		c.Next()
 	}
 }

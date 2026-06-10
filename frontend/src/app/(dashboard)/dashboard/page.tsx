@@ -1,4 +1,6 @@
-import { Sparkles } from "lucide-react"
+"use client"
+
+import { Building2, Sparkles } from "lucide-react"
 
 import { UserProfileCard } from "@/components/dashboard/user-profile-card"
 import {
@@ -8,17 +10,48 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { useActiveWorkspace } from "@/stores/workspace-store"
 
 export default function DashboardPage() {
+  const workspace = useActiveWorkspace()
+
   return (
-    <div className="mx-auto max-w-6xl space-y-8 px-4 py-10 sm:px-6">
+    <div className="space-y-8">
       <div className="space-y-2">
         <h1 className="text-3xl font-semibold tracking-tight">Dashboard</h1>
         <p className="max-w-2xl text-muted-foreground">
-          You are signed in. Workspace management, documents, and AI chat will
-          appear here as backend features are added.
+          Manage your AI support workspace, documents, and team from here.
         </p>
       </div>
+
+      {workspace && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Building2 className="size-5 text-primary" />
+              Active workspace
+            </CardTitle>
+            <CardDescription>
+              You are working inside this tenant space.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm">
+            <p>
+              <span className="text-muted-foreground">Name:</span> {workspace.name}
+            </p>
+            <p>
+              <span className="text-muted-foreground">Slug:</span> {workspace.slug}
+            </p>
+            <p>
+              <span className="text-muted-foreground">Your role:</span>{" "}
+              {workspace.role}
+            </p>
+            <p>
+              <span className="text-muted-foreground">Plan:</span> {workspace.plan}
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
         <UserProfileCard />
@@ -29,14 +62,12 @@ export default function DashboardPage() {
               <Sparkles className="size-5 text-primary" />
               Coming next
             </CardTitle>
-            <CardDescription>
-              Planned modules from your product roadmap.
-            </CardDescription>
+            <CardDescription>Phase 3 and beyond.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3 text-sm text-muted-foreground">
-            <p>• Workspaces and team members</p>
             <p>• Document uploads and knowledge base</p>
             <p>• AI chat with source citations</p>
+            <p>• Team invitations and roles</p>
             <p>• Real-time analytics dashboard</p>
           </CardContent>
         </Card>
